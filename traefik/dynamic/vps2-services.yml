@@ -1,0 +1,173 @@
+http:
+  routers:
+    portainer:
+      rule: "Host(`portainer.millyweb.com`)"
+      entryPoints: [websecure]
+      service: portainer
+      tls: {certResolver: letsencrypt}
+    prometheus:
+      rule: "Host(`prometheus.millyweb.com`)"
+      entryPoints: [websecure]
+      service: prometheus
+      tls: {certResolver: letsencrypt}
+    grafana:
+      rule: "Host(`grafana.millyweb.com`)"
+      entryPoints: [websecure]
+      service: grafana
+      tls: {certResolver: letsencrypt}
+    auth:
+      rule: "Host(`auth.millyweb.com`)"
+      entryPoints: [websecure]
+      service: dex
+      tls: {certResolver: letsencrypt}
+    mcp-oauth:
+      rule: "Host(`mcp.millyweb.com`) && (PathPrefix(`/.well-known`) || PathPrefix(`/oauth`))"
+      entryPoints: [websecure]
+      service: mcp-front
+      tls: {certResolver: letsencrypt}
+      priority: 100
+    mcp-root:
+      rule: "Host(`mcp.millyweb.com`)"
+      entryPoints: [websecure]
+      service: mcp-root-proxy
+      tls: {certResolver: letsencrypt}
+      priority: 10
+    openwebui:
+      rule: "Host(`chat.millyweb.com`)"
+      entryPoints: [websecure]
+      service: openwebui
+      tls: {certResolver: letsencrypt}
+    qdrant:
+      rule: "Host(`qdrant.millyweb.com`)"
+      entryPoints: [websecure]
+      service: qdrant
+      tls: {certResolver: letsencrypt}
+    infisical:
+      rule: "Host(`inf.millyweb.com`)"
+      entryPoints: [websecure]
+      service: infisical
+      tls: {certResolver: letsencrypt}
+    workbench-api:
+      rule: "Host(`workbench.millyweb.com`) && (PathPrefix(`/api`) || PathPrefix(`/mcp`) || PathPrefix(`/ws`))"
+      entryPoints: [websecure]
+      service: workbench-backend
+      tls: {certResolver: letsencrypt}
+      priority: 100
+    workbench-ui:
+      rule: "Host(`workbench.millyweb.com`)"
+      entryPoints: [websecure]
+      service: workbench-ui
+      tls: {certResolver: letsencrypt}
+      priority: 10
+    coolify-ws:
+      rule: "(Host(`coolify.millyweb.com`) || Host(`deploy.millyweb.com`)) && PathPrefix(`/app`)"
+      entryPoints: [websecure]
+      service: coolify-realtime
+      tls: {certResolver: letsencrypt}
+      priority: 100
+    coolify:
+      rule: "Host(`coolify.millyweb.com`) || Host(`deploy.millyweb.com`)"
+      entryPoints: [websecure]
+      service: coolify
+      tls: {certResolver: letsencrypt}
+      priority: 10
+    revenuefirst:
+      rule: "Host(`revenuefirst.ai`) || Host(`www.revenuefirst.ai`)"
+      entryPoints: [websecure]
+      service: revenuefirst
+      tls: {certResolver: letsencrypt}
+    signal:
+      rule: "Host(`signal.millyweb.com`)"
+      entryPoints: [websecure]
+      service: signal
+      tls: {certResolver: letsencrypt}
+    n8n:
+      rule: "Host(`n8n.millyweb.com`)"
+      entryPoints: [websecure]
+      service: n8n
+      tls: {certResolver: letsencrypt}
+    millyweb:
+      rule: "Host(`millyweb.com`) || Host(`www.millyweb.com`)"
+      entryPoints: [websecure]
+      service: millyweb
+      tls: {certResolver: letsencrypt}
+    # ContextForge Admin UI
+    contextforge-admin:
+      rule: "Host(`forge.millyweb.com`)"
+      entryPoints: [websecure]
+      service: contextforge-admin
+      tls: {certResolver: letsencrypt}
+    # ContextForge MCP SSE endpoint
+    contextforge-mcp:
+      rule: "Host(`forge.millyweb.com`) && PathPrefix(`/sse`)"
+      entryPoints: [websecure]
+      service: contextforge-mcp
+      tls: {certResolver: letsencrypt}
+      priority: 100
+    servicepro:
+      rule: "Host(`servicepro.millyweb.com`)"
+      entryPoints: [websecure]
+      service: servicepro
+      tls: {certResolver: letsencrypt}
+  services:
+    portainer:
+      loadBalancer:
+        servers: [{url: "http://10.0.0.2:9000"}]
+    prometheus:
+      loadBalancer:
+        servers: [{url: "http://10.0.0.2:9090"}]
+    grafana:
+      loadBalancer:
+        servers: [{url: "http://10.0.0.2:3000"}]
+    dex:
+      loadBalancer:
+        servers: [{url: "http://10.0.0.2:5556"}]
+    mcp-front:
+      loadBalancer:
+        servers: [{url: "http://10.0.0.2:8088"}]
+    mcp-root-proxy:
+      loadBalancer:
+        servers: [{url: "http://10.0.0.2:8090"}]
+    openwebui:
+      loadBalancer:
+        servers: [{url: "http://10.0.0.2:3001"}]
+    qdrant:
+      loadBalancer:
+        servers: [{url: "http://10.0.0.2:6333"}]
+    infisical:
+      loadBalancer:
+        servers: [{url: "http://10.0.0.2:8095"}]
+    workbench-backend:
+      loadBalancer:
+        servers: [{url: "http://10.0.0.2:8091"}]
+    workbench-ui:
+      loadBalancer:
+        servers: [{url: "http://10.0.0.2:8096"}]
+    coolify:
+      loadBalancer:
+        servers: [{url: "http://10.0.0.2:8000"}]
+    coolify-realtime:
+      loadBalancer:
+        servers: [{url: "http://10.0.0.2:6001"}]
+    revenuefirst:
+      loadBalancer:
+        servers: [{url: "http://10.0.0.2:8097"}]
+    signal:
+      loadBalancer:
+        servers: [{url: "http://10.0.0.2:4321"}]
+    n8n:
+      loadBalancer:
+        servers: [{url: "http://10.0.0.2:5678"}]
+    millyweb:
+      loadBalancer:
+        servers: [{url: "http://10.0.0.2:4320"}]
+    # ContextForge services
+    contextforge-admin:
+      loadBalancer:
+        servers: [{url: "http://10.0.0.2:4444"}]
+    contextforge-mcp:
+      loadBalancer:
+        servers: [{url: "http://10.0.0.2:8099"}]
+    servicepro:
+      loadBalancer:
+        servers: [{url: "http://10.0.0.2:8100"}]

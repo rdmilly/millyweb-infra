@@ -1,0 +1,34 @@
+# Ignore secrets and runtime data
+*.env
+*.env.*
+.env*
+!.env.example
+
+# Ignore logs
+logs/
+*.log
+
+# Ignore certs
+*.pem
+*.key
+*.crt
+
+# Ignore large data dirs
+data/
+volumes/
+
+# Traefik TLS certs
+acme.json
+
+# Backup/broken files
+*.bak
+*.bak*
+*.broken
+*.broken*
+*.damaged
+test.txt
+
+# Embedded repos - track only their compose files
+revenuefirst-website/www
+trackers/mw
+trackers/rf

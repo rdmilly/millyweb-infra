@@ -1,0 +1,45 @@
+services:
+  helix-design:
+    image: nginx:alpine
+    container_name: helix-design
+    restart: unless-stopped
+    volumes:
+      - /opt/projects/helix-design:/usr/share/nginx/html:ro
+      - /opt/stacks/helix-design/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    networks:
+      - coolify
+    depends_on:
+      - helix-design-api
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=coolify"
+      # HTTP router — handles ACME challenge + redirects to HTTPS
+      - "traefik.http.routers.helix-design-http.rule=Host(`design.millyweb.com`)"
+      - "traefik.http.routers.helix-design-http.entrypoints=http"
+      - "traefik.http.routers.helix-design-http.middlewares=https-redirect"
+      # HTTPS router
+      - "traefik.http.routers.helix-design.rule=Host(`design.millyweb.com`)"
+      - "traefik.http.routers.helix-design.entrypoints=https"
+      - "traefik.http.routers.helix-design.tls=true"
+      - "traefik.http.routers.helix-design.tls.certresolver=letsencrypt"
+      - "traefik.http.services.helix-design.loadbalancer.server.port=80"
+      # Redirect middleware
+      - "traefik.http.middlewares.https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.https-redirect.redirectscheme.permanent=true"
+
+  helix-design-api:
+    image: python:3.11-alpine
+    container_name: helix-design-api
+    restart: unless-stopped
+    command: python /app/save-api.py
+    volumes:
+      - /opt/projects/helix-design/save-api.py:/app/save-api.py:ro
+      - /opt/projects/helix-design/saves:/saves
+    environment:
+      - PORT=8080
+    networks:
+      - coolify
+
+networks:
+  coolify:
+    external: true

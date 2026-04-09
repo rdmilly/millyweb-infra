@@ -1,0 +1,15 @@
+http:
+  routers:
+    coolify-ui:
+      rule: "Host(`coolify.millyweb.com`)"
+      service: coolify-ui
+      entryPoints:
+        - websecure
+      tls:
+        certResolver: cloudflare
+
+  services:
+    coolify-ui:
+      loadBalancer:
+        servers:
+          - url: "http://127.0.0.1:8000"

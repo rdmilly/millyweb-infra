@@ -1,0 +1,15 @@
+http:
+  routers:
+    servicepro:
+      rule: "Host(`servicepro.millyweb.com`)"
+      entryPoints:
+        - websecure
+      service: servicepro
+      tls:
+        certResolver: cloudflare
+
+  services:
+    servicepro:
+      loadBalancer:
+        servers:
+          - url: "http://10.0.0.2:3000"

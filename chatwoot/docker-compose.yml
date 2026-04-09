@@ -1,0 +1,148 @@
+services:
+  chatwoot-db:
+    image: pgvector/pgvector:pg15
+    container_name: chatwoot-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: chatwoot
+      POSTGRES_USER: chatwoot
+      POSTGRES_PASSWORD: ChatwootDB2026Secure
+    volumes:
+      - chatwoot_postgres_data:/var/lib/postgresql/data
+    networks:
+      - chatwoot-internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U chatwoot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 128M
+
+  chatwoot-redis:
+    image: redis:7-alpine
+    container_name: chatwoot-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 128mb --maxmemory-policy allkeys-lru
+    volumes:
+      - chatwoot_redis_data:/data
+    networks:
+      - chatwoot-internal
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 192M
+        reservations:
+          memory: 64M
+
+  chatwoot-rails:
+    image: chatwoot/chatwoot:v4.0.1-ce
+    container_name: chatwoot-rails
+    restart: unless-stopped
+    depends_on:
+      chatwoot-db:
+        condition: service_healthy
+      chatwoot-redis:
+        condition: service_healthy
+    environment:
+      SECRET_KEY_BASE: b7e2f9a3c1d8e5f6a4b2c9d8e7f1a3b5c6d9e8f2a4b7c1d3e6f9a2b5c8d1e4f7
+      FRONTEND_URL: https://inbox.millyweb.com
+      DEFAULT_LOCALE: en
+      POSTGRES_HOST: chatwoot-db
+      POSTGRES_DATABASE: chatwoot
+      POSTGRES_USERNAME: chatwoot
+      POSTGRES_PASSWORD: ChatwootDB2026Secure
+      REDIS_URL: redis://chatwoot-redis:6379
+      RAILS_ENV: production
+      RAILS_LOG_TO_STDOUT: "true"
+      LOG_LEVEL: info
+      MAILER_SENDER_EMAIL: support@revenuefirst.ai
+      ENABLE_ACCOUNT_SIGNUP: "false"
+      RAILS_MAX_THREADS: 3
+      WEB_CONCURRENCY: 2
+      MALLOC_ARENA_MAX: 2
+    entrypoint: docker/entrypoints/rails.sh
+    command: bundle exec rails s -p 3000 -b 0.0.0.0
+    volumes:
+      - chatwoot_storage:/app/storage
+    networks:
+      - chatwoot-internal
+      - coolify
+    labels:
+      - "traefik.enable=true"
+      # HTTP router (for ACME challenges)
+      - "traefik.http.routers.chatwoot-http.rule=Host(`inbox.millyweb.com`)"
+      - "traefik.http.routers.chatwoot-http.entrypoints=http"
+      - "traefik.http.routers.chatwoot-http.service=chatwoot"
+      # HTTPS router
+      - "traefik.http.routers.chatwoot.rule=Host(`inbox.millyweb.com`)"
+      - "traefik.http.routers.chatwoot.entrypoints=https"
+      - "traefik.http.routers.chatwoot.tls=true"
+      - "traefik.http.routers.chatwoot.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.chatwoot.service=chatwoot"
+      # Service
+      - "traefik.http.services.chatwoot.loadbalancer.server.port=3000"
+    deploy:
+      resources:
+        limits:
+          memory: 1536M
+          cpus: '1.0'
+        reservations:
+          memory: 512M
+
+  chatwoot-sidekiq:
+    image: chatwoot/chatwoot:v4.0.1-ce
+    container_name: chatwoot-sidekiq
+    restart: unless-stopped
+    depends_on:
+      chatwoot-db:
+        condition: service_healthy
+      chatwoot-redis:
+        condition: service_healthy
+    environment:
+      SECRET_KEY_BASE: b7e2f9a3c1d8e5f6a4b2c9d8e7f1a3b5c6d9e8f2a4b7c1d3e6f9a2b5c8d1e4f7
+      FRONTEND_URL: https://inbox.millyweb.com
+      DEFAULT_LOCALE: en
+      POSTGRES_HOST: chatwoot-db
+      POSTGRES_DATABASE: chatwoot
+      POSTGRES_USERNAME: chatwoot
+      POSTGRES_PASSWORD: ChatwootDB2026Secure
+      REDIS_URL: redis://chatwoot-redis:6379
+      RAILS_ENV: production
+      RAILS_LOG_TO_STDOUT: "true"
+      LOG_LEVEL: info
+      MAILER_SENDER_EMAIL: support@revenuefirst.ai
+      MALLOC_ARENA_MAX: 2
+    entrypoint: docker/entrypoints/rails.sh
+    command: bundle exec sidekiq -C config/sidekiq.yml
+    volumes:
+      - chatwoot_storage:/app/storage
+    networks:
+      - chatwoot-internal
+    deploy:
+      resources:
+        limits:
+          memory: 768M
+          cpus: '0.5'
+        reservations:
+          memory: 256M
+
+volumes:
+  chatwoot_postgres_data:
+  chatwoot_redis_data:
+  chatwoot_storage:
+
+networks:
+  chatwoot-internal:
+    driver: bridge
+  coolify:
+    external: true

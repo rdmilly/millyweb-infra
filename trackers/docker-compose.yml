@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  tracker-mw:
+    image: nginx:alpine
+    container_name: tracker-mw
+    restart: unless-stopped
+    volumes:
+      - ./mw:/usr/share/nginx/html:ro
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.tracker-mw.rule=Host(`tmw.millyweb.com`)"
+      - "traefik.http.routers.tracker-mw.entrypoints=websecure"
+      - "traefik.http.routers.tracker-mw.tls.certresolver=letsencrypt"
+      - "traefik.http.services.tracker-mw.loadbalancer.server.port=80"
+    networks:
+      - traefik-public
+
+  tracker-rf:
+    image: nginx:alpine
+    container_name: tracker-rf
+    restart: unless-stopped
+    volumes:
+      - ./rf:/usr/share/nginx/html:ro
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.tracker-rf.rule=Host(`trf.millyweb.com`)"
+      - "traefik.http.routers.tracker-rf.entrypoints=websecure"
+      - "traefik.http.routers.tracker-rf.tls.certresolver=letsencrypt"
+      - "traefik.http.services.tracker-rf.loadbalancer.server.port=80"
+    networks:
+      - traefik-public
+
+networks:
+  traefik-public:
+    external: true

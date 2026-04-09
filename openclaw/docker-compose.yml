@@ -1,0 +1,36 @@
+services:
+  openclaw:
+    build: .
+    container_name: openclaw-jerry
+    restart: unless-stopped
+    network_mode: host
+    
+    environment:
+      - HOME=/root
+      - NODE_OPTIONS=--dns-result-order=ipv4first
+      - OPENROUTER_API_KEY=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
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - OPENCLAW_GATEWAY_PORT=18789
+      - OPENCLAW_GATEWAY_TOKEN=c2eee186c318352ffc47d3d1407fef24eb4adb2fcd0dcd9a
+      - GOG_KEYRING_BACKEND=file
+      - GOG_KEYRING_PASSWORD=3b712d6bde610d47cb5e0d169700b496
+      - GOG_ACCOUNT=dev@revenuefirst.ai
+    
+    volumes:
+      # OpenClaw config + state
+      - /root/.openclaw:/root/.openclaw
+      # Workspace (skills, memory, identity)
+      - /root/clawd:/root/clawd
+      # Secrets
+      - /root/.secrets:/root/.secrets
+      # MCP adapter plugin
+      - /root/openclaw-mcp-adapter:/root/openclaw-mcp-adapter
+      # Host binaries (mount directly)
+      - /usr/local/bin/gog:/usr/local/bin/gog:ro
+      - /usr/bin/docker:/usr/bin/docker:ro
+      # Docker socket (full container management)
+      - /var/run/docker.sock:/var/run/docker.sock
+      # SSH access
+      - /root/.ssh:/root/.ssh:ro
+      # Google Calendar/Gmail CLI config
+      - /root/.config/gogcli:/root/.config/gogcli
